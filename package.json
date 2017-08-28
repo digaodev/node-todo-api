@@ -1,0 +1,31 @@
+{
+  "name": "todo-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_ENV=test mocha --recursive",
+    "test-watch": "NODE_ENV=test nodemon --exec \"npm test\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/digaodev/node-todo-api.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/digaodev/node-todo-api/issues"
+  },
+  "homepage": "https://github.com/digaodev/node-todo-api#readme",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "express": "^4.15.4",
+    "mongoose": "^4.11.9"
+  },
+  "devDependencies": {
+    "chai": "^4.1.1",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.5.0",
+    "supertest": "^3.0.0"
+  }
+}
