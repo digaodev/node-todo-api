@@ -8,6 +8,4 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-module.exports = {
-  mongoose
-};
+module.exports = mongoose;

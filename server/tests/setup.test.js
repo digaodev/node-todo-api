@@ -7,13 +7,13 @@ before((done) => {
   .once('open', () => done())
   .on('error', (err) => {
     console.log(err);
-  })
+  });
 });
 
 beforeEach((done) => {
-const { drivers  } = mongoose.connection.collections;
+const { todos } = mongoose.connection.collections;
 
-drivers.drop()
+todos.drop()
 .then(() => done())
 .catch(() => done());
 
