@@ -57,6 +57,6 @@ app.post('/todos', (req, res) => {
     });
 });
 
-app.listen(3000, () => console.log(`Listening on port ${port}`));
+app.listen(port, () => console.log(`Listening on port ${port}`));
 
 module.exports = app;
