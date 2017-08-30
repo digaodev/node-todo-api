@@ -4,8 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node server/server.js",
     "test": "NODE_ENV=test mocha server/ --recursive",
     "test-watch": "NODE_ENV=test nodemon --exec \"npm test\""
+  },
+  "engines": {
+    "node": "8.4.0"
   },
   "repository": {
     "type": "git",
