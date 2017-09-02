@@ -11,7 +11,9 @@ const todosSeed = [{
   },
   {
     _id: new ObjectId(),
-    text: 'A new todo 2'
+    text: 'A new todo 2',
+    completed: true,
+    completedAt: 111
   },
   {
     _id: new ObjectId(),
@@ -139,6 +141,51 @@ describe('Express App', () => {
           }).catch((err) => done(err));
         });
     });
+  });
+
+  describe('handles a PATCH /todos/:id', () => {
+    it('should update one specific todo to completed=true and its text, and then return it', (done) => {
+      const id = todosSeed[0]._id;
+      const idStr = todosSeed[0]._id.toHexString();
+      const text = 'Updated todo text';
+
+      request(app)
+        .patch(`/todos/${idStr}`)
+        .send({
+          text,
+          completed: true
+        })
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).to.be.an('Object');
+          expect(res.body.todo._id).to.equal(idStr);
+          expect(res.body.todo.text).to.be.equal(text);
+          expect(res.body.todo.completed).to.be.true;
+          expect(res.body.todo.completedAt).to.be.a('Number');
+        })
+        .end(done);
+    });
+  });
+
+  it('should update one specific todo to completed=false and return it', (done) => {
+    const id = todosSeed[1]._id;
+    const idStr = todosSeed[1]._id.toHexString();
+
+    request(app)
+      .patch(`/todos/${idStr}`)
+      .send({
+        completed: false
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body).to.be.an('Object');
+        expect(res.body.todo._id).to.equal(idStr);
+        expect(res.body.todo.completed).to.be.false;
+        expect(res.body.todo.completedAt).to.be.null;
+      })
+      .end(done);
   });
 
 

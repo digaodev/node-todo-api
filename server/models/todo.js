@@ -11,6 +11,10 @@ const TodoSchema = new Schema({
     type: Boolean,
     required: true,
     default: false
+  },
+  completedAt: {
+    type: Number,
+    default: null
   }
 });
 
