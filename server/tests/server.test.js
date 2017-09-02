@@ -115,4 +115,31 @@ describe('Express App', () => {
     });
   });
 
+  describe('handles a DELETE /todos/:id', () => {
+    it('should delete one specific todo and return it', (done) => {
+      const id = todosSeed[0]._id;
+      const idStr = todosSeed[0]._id.toHexString();
+
+      request(app)
+        .delete(`/todos/${idStr}`)
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body).to.be.an('Object');
+          expect(res.body.todo._id).to.equal(idStr);
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+
+          Todo.findById({
+            _id: id
+          }).then((todo) => {
+            expect(todo).to.be.null;
+            done();
+          }).catch((err) => done(err));
+        });
+    });
+  });
+
+
 });
