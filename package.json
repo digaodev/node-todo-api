@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node server/server.js",
-    "test": "NODE_ENV=test mocha server/ --recursive",
-    "test-watch": "NODE_ENV=test nodemon --exec \"npm test\""
+    "test": "export NODE_ENV=test || SET \"NODE_ENV=test\" && mocha server/ --recursive",
+    "test-watch": "export NODE_ENV=test || SET \"NODE_ENV=test\" && nodemon --exec \"npm test\""
   },
   "engines": {
     "node": "8.4.0"
