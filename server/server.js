@@ -13,6 +13,8 @@ var app = express();
 
 app.use(bodyParser.json());
 
+
+// todos routes
 app.get('/todos', (req, res) => {
   Todo.find()
     .then((todos) => {
@@ -109,6 +111,23 @@ app.patch('/todos/:id', (req, res) => {
   } else {
     res.status(404).send();
   }
+});
+
+// users routes
+app.post('/users', (req, res) => {
+  const body = _.pick(req.body, ['email', 'password']);
+
+  let user = new User(body);
+
+  user.save()
+    .then((savedUser) => {
+      res.status(201).send({
+        savedUser
+      });
+    })
+    .catch((err) => {
+      res.status(400).send(err);
+    });
 });
 
 app.listen(process.env.PORT, () => console.log(`Listening on port ${process.env.PORT}`));
