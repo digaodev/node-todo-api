@@ -6,13 +6,13 @@ const _ = require('lodash');
 const ObjectId = require('mongodb').ObjectID;
 
 const mongoose = require('./db/mongoose');
-var Todo = require('./models/todo');
-var User = require('./models/user');
+const auth = require('./middleware/authenticate');
+let Todo = require('./models/todo');
+let User = require('./models/user');
 
-var app = express();
+let app = express();
 
 app.use(bodyParser.json());
-
 
 // todos routes
 app.get('/todos', (req, res) => {
@@ -116,13 +116,14 @@ app.patch('/todos/:id', (req, res) => {
 // users routes
 app.post('/users', (req, res) => {
   const body = _.pick(req.body, ['email', 'password']);
-
   let user = new User(body);
 
   user.save()
-    .then((savedUser) => {
-      res.status(201).send({
-        savedUser
+    .then(() => {
+      return user.generateAuthToken();
+    }).then((token) => {
+      res.header('x-auth', token).status(201).send({
+        user
       });
     })
     .catch((err) => {
