@@ -29,11 +29,11 @@ const UserSchema = new Schema({
   tokens: [{
     access: {
       type: String,
-      required: true
+      // required: true
     },
     token: {
       type: String,
-      required: true
+      // required: true
     }
   }]
 });
@@ -43,8 +43,8 @@ UserSchema.pre('save', function (next) {
 
   if (userInstance.isModified('password')) {
     bcrypt.genSalt((12, (err, salt) => {
-      bcrypt.hash(user.password, salt, (err, hash) => {
-        user.password = hash;
+      bcrypt.hash(userInstance.password, salt, (err, hash) => {
+        userInstance.password = hash;
         next();
       });
     }));

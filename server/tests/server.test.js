@@ -6,58 +6,11 @@ const app = require('../server');
 const Todo = require('../models/todo');
 const User = require('../models/user');
 
-const todosSeed = [{
-    _id: new ObjectId(),
-    text: 'A new todo 1'
-  },
-  {
-    _id: new ObjectId(),
-    text: 'A new todo 2',
-    completed: true,
-    completedAt: 111
-  },
-  {
-    _id: new ObjectId(),
-    text: 'A new todo 3'
-  }
-];
+const { todosSeed, populateTodos, usersSeed, populateUsers } = require('./seed.test');
 
-const usersSeed = [{
-    _id: new ObjectId(),
-    email: 'seeduser0@test.com',
-    password: '00000000',
-    tokens: [{
-      access: '0',
-      token: '0'
-    }]
-  },
-  {
-    _id: new ObjectId(),
-    email: 'seeduser1@test.com',
-    password: '11111111',
-    tokens: [{
-      access: '1',
-      token: '1'
-    }]
-  }
-];
 
-beforeEach((done) => {
-
-  User.remove({}).then(() => {
-      return User.insertMany(usersSeed);
-    })
-    .then(() => {
-      Todo.remove({}).then(() => {
-          return Todo.insertMany(todosSeed);
-        })
-        .then(() => done())
-        .catch((err) => done(err));
-    })
-    .catch((err) => done(err));
-
-});
-
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('Express App', () => {
 
@@ -230,7 +183,7 @@ describe('Express App', () => {
         })
         .expect(201)
         .expect((res) => {
-          expect(res.body.savedUser.email).to.equal(email);
+          expect(res.body.user.email).to.equal(email);
         })
         .end((err, res) => {
           if (err) return done(err);

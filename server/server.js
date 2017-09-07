@@ -6,7 +6,7 @@ const _ = require('lodash');
 const ObjectId = require('mongodb').ObjectID;
 
 const mongoose = require('./db/mongoose');
-const auth = require('./middleware/authenticate');
+const authenticate = require('./middleware/authenticate');
 let Todo = require('./models/todo');
 let User = require('./models/user');
 
@@ -129,6 +129,12 @@ app.post('/users', (req, res) => {
     .catch((err) => {
       res.status(400).send(err);
     });
+});
+
+app.get('/users/me', authenticate, (req, res) => {
+  res.status(200).send(
+    req.user
+  );
 });
 
 app.listen(process.env.PORT, () => console.log(`Listening on port ${process.env.PORT}`));
