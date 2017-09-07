@@ -6,7 +6,12 @@ const app = require('../server');
 const Todo = require('../models/todo');
 const User = require('../models/user');
 
-const { todosSeed, populateTodos, usersSeed, populateUsers } = require('./seed.test');
+const {
+  todosSeed,
+  populateTodos,
+  usersSeed,
+  populateUsers
+} = require('./seed.test');
 
 
 beforeEach(populateUsers);
@@ -184,7 +189,7 @@ describe('Express App', () => {
         .expect(201)
         .expect((res) => {
           expect(res.headers['x-auth']).to.be.a('String');
-          expect(res.body.user.email).to.equal(email);          
+          expect(res.body.user.email).to.equal(email);
         })
         .end((err, res) => {
           if (err) return done(err);
@@ -231,30 +236,90 @@ describe('Express App', () => {
 
           done();
         });
-    });    
+    });
   });
 
   describe('handles a GET /users/me', () => {
     it('should return user if authenticated', (done) => {
       request(app)
-      .get('/users/me')
-      .set('x-auth', usersSeed[0].tokens[0].token)
-      .expect(200)
-      .expect((res) => {
-        expect(res.body._id).to.equal(usersSeed[0]._id.toHexString());
-        expect(res.body.email).to.equal(usersSeed[0].email);
-      })
-      .end(done);
+        .get('/users/me')
+        .set('x-auth', usersSeed[0].tokens[0].token)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body._id).to.equal(usersSeed[0]._id.toHexString());
+          expect(res.body.email).to.equal(usersSeed[0].email);
+        })
+        .end(done);
     });
 
     it('should return status 401 and an empty response body if not authenticated', (done) => {
       request(app)
-      .get('/users/me')
-      .expect(401)
-      .expect((res) => {
-        expect(res.body).to.be.empty;
-      })
-      .end(done);
+        .get('/users/me')
+        .expect(401)
+        .expect((res) => {
+          expect(res.body).to.be.empty;
+        })
+        .end(done);
+    });
+  });
+
+  describe('handles a POST /users/login', () => {
+    it('should return auth token if login is succesful', (done) => {
+      const email = usersSeed[1].email;
+      const password = usersSeed[1].password;
+
+      request(app)
+        .post('/users/login')
+        .send({
+          email,
+          password
+        })
+        .expect(200)
+        .expect((res) => {
+          expect(res.headers['x-auth']).to.be.a('String');
+          expect(res.body.user.email).to.equal(email);
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+
+          User.find({
+            email
+          }).then((users) => {
+            expect(users.length).to.equal(1);
+            expect(users[0].tokens).to.be.an('Array');
+            expect(users[0].tokens[0].access).to.equal('auth');
+            expect(users[0].tokens[0].token).to.equal(res.headers['x-auth']);
+            done();
+          }).catch((err) => done(err));
+        });
+    });
+
+    it('should reject with status 400 if login is unsuccesful', (done) => {
+      const email = usersSeed[1].email;
+      const password = 'invalidpass';
+
+      request(app)
+        .post('/users/login')
+        .send({
+          email,
+          password
+        })
+        .expect(400)
+        .expect((res) => {
+          expect(res.headers['x-auth']).to.be.undefined;
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+
+          User.find({
+            email
+          }).then((users) => {
+            expect(users.length).to.equal(1);
+            expect(users[0].tokens).to.be.an('Array');
+            expect(users[0].tokens[0]).to.be.undefined;
+            done();
+          }).catch((err) => done(err));
+        });
     });
   });
 
