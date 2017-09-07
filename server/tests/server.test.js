@@ -171,7 +171,7 @@ describe('Express App', () => {
 
 
   describe('handles a POST /users ', () => {
-    it('should create a new user', (done) => {
+    it('should create a new user and return it as a response', (done) => {
       var email = 'testuser@test.com';
       var password = '12345678';
 
@@ -183,7 +183,8 @@ describe('Express App', () => {
         })
         .expect(201)
         .expect((res) => {
-          expect(res.body.user.email).to.equal(email);
+          expect(res.headers['x-auth']).to.be.a('String');
+          expect(res.body.user.email).to.equal(email);          
         })
         .end((err, res) => {
           if (err) return done(err);
@@ -198,7 +199,7 @@ describe('Express App', () => {
         });
     });
 
-    it('should NOT create a new user with an existing email', (done) => {
+    it('should return status 400 and a validation error code of 11000 due to existing email', (done) => {
       request(app)
         .post('/users')
         .send({
@@ -214,6 +215,46 @@ describe('Express App', () => {
 
           done();
         });
+    });
+    it('should return status 400 and a validation error due to invalid email', (done) => {
+      request(app)
+        .post('/users')
+        .send({
+          email: '123213123',
+        })
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.name).to.equal('ValidationError');
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+
+          done();
+        });
+    });    
+  });
+
+  describe('handles a GET /users/me', () => {
+    it('should return user if authenticated', (done) => {
+      request(app)
+      .get('/users/me')
+      .set('x-auth', usersSeed[0].tokens[0].token)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body._id).to.equal(usersSeed[0]._id.toHexString());
+        expect(res.body.email).to.equal(usersSeed[0].email);
+      })
+      .end(done);
+    });
+
+    it('should return status 401 and an empty response body if not authenticated', (done) => {
+      request(app)
+      .get('/users/me')
+      .expect(401)
+      .expect((res) => {
+        expect(res.body).to.be.empty;
+      })
+      .end(done);
     });
   });
 
