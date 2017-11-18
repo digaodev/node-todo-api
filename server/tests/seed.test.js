@@ -54,7 +54,10 @@ const usersSeed = [{
 // };
 const populateUsers = (done) => {
   User.remove({}).then(() => {
-      return Promise.all([ new User(usersSeed[0]).save(), new User(usersSeed[1]).save()]);
+      return Promise.all([
+        new User(usersSeed[0]).save(),
+        new User(usersSeed[1]).save()
+      ]);
     })
     .then(() => done())
     .catch((err) => done(err));

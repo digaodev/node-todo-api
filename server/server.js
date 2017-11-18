@@ -122,6 +122,7 @@ app.post('/users', (req, res) => {
     .then(() => {
       return user.generateAuthToken();
     }).then((token) => {
+      // 'x-auth' is a custom header, not a default http header
       res.header('x-auth', token).status(201).send({
         user
       });
@@ -131,6 +132,7 @@ app.post('/users', (req, res) => {
     });
 });
 
+// test route for auth middleware
 app.get('/users/me', authenticate, (req, res) => {
   res.status(200).send(
     req.user
@@ -153,6 +155,12 @@ app.post('/users/login', (req, res) => {
     });
 });
 
-app.listen(process.env.PORT, () => console.log(`Listening on port ${process.env.PORT}`));
+app.listen(process.env.PORT, () => {
+  console.log('======================================================');
+  console.log(`Listening on port ${ process.env.PORT }`);
+  console.log(`Environment is ${ process.env.NODE_ENV }`);
+  console.log(`Connected to database ${ process.env.MONGODB_URI }`);
+  console.log('======================================================');
+});
 
 module.exports = app;

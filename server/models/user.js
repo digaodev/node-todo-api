@@ -53,52 +53,9 @@ UserSchema.pre('save', function (next) {
   }
 });
 
-UserSchema.statics.findByToken = function (token) {
-  let UserModel = this;
-  let decodedJWT;
-
-  try {
-    decodedJWT = jwt.verify(token, secret);
-  } catch (err) {
-    return Promise.reject();
-  }
-
-  return UserModel.findOne({
-    '_id': decodedJWT._id,
-    'tokens.token': token,
-    'tokens.access': 'auth'
-  });
-};
-
-UserSchema.statics.findByCredentials = function (email, password) {
-  let UserModel = this;
-
-  return UserModel.findOne({
-      email,
-    })
-    .then((user) => {
-      if (!user) return Promise.reject();
-      
-      return bcrypt.compare(password, user.password)
-        .then((validpass) => {
-          if (validpass) {
-            return Promise.resolve(user); 
-          } else {
-            return Promise.reject(); 
-          }
-        });
-    });
-
-};
-
-UserSchema.methods.toJSON = function () {
-  let userInstance = this;
-
-  let userObject = userInstance.toObject();
-
-  return _.pick(userObject, ['_id', 'email']);
-};
-
+// the es5 function notation is needed here
+// because arrow functions do not bind the 'this' keyword
+// and in this function the User instance is needed
 UserSchema.methods.generateAuthToken = function () {
   var userInstance = this;
 
@@ -117,6 +74,57 @@ UserSchema.methods.generateAuthToken = function () {
     .then(() => {
       return token;
     });
+};
+
+// overriding this is necessary to limit the information returned by default
+// for security reasons, the token and password should not be returned
+UserSchema.methods.toJSON = function () {
+  let userInstance = this;
+
+  let userObject = userInstance.toObject();
+
+  return _.pick(userObject, ['_id', 'email']);
+};
+
+// the es5 function notation is needed here
+// because arrow functions do not bind the 'this' keyword
+// and in this function the User Model is needed
+UserSchema.statics.findByToken = function (token) {
+  let UserModel = this;
+  let decodedJWT;
+
+  try {
+    decodedJWT = jwt.verify(token, secret);
+  } catch (err) {
+    return Promise.reject();
+  }
+
+  return UserModel.findOne({
+    '_id': decodedJWT._id,
+    'tokens.access': 'auth',
+    'tokens.token': token
+  });
+};
+
+UserSchema.statics.findByCredentials = function (email, password) {
+  let UserModel = this;
+
+  return UserModel.findOne({
+      email,
+    })
+    .then((user) => {
+      if (!user) return Promise.reject();
+
+      return bcrypt.compare(password, user.password)
+        .then((validpass) => {
+          if (validpass) {
+            return Promise.resolve(user);
+          } else {
+            return Promise.reject();
+          }
+        });
+    });
+
 };
 
 const User = mongoose.model('User', UserSchema);

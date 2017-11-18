@@ -174,7 +174,6 @@ describe('Express App', () => {
     });
   });
 
-
   describe('handles a POST /users ', () => {
     it('should create a new user and return it as a response', (done) => {
       var email = 'testuser@test.com';
@@ -189,6 +188,7 @@ describe('Express App', () => {
         .expect(201)
         .expect((res) => {
           expect(res.headers['x-auth']).to.be.a('String');
+          expect(res.body.user._id).to.be.a('String');
           expect(res.body.user.email).to.equal(email);
         })
         .end((err, res) => {
@@ -199,12 +199,34 @@ describe('Express App', () => {
           }).then((users) => {
             expect(users.length).to.equal(1);
             expect(users[0].email).to.equal(email);
+            expect(users[0].password).to.not.equal(password);
             done();
           }).catch((err) => done(err));
         });
     });
 
-    it('should return status 400 and a validation error code of 11000 due to existing email', (done) => {
+    it('should not create user and return status 400 and a validation error object due to wrong email and password', (done) => {
+      request(app)
+        .post('/users')
+        .send({
+          email: 'invalidemailATgmail.com',
+          password: 'pass'
+        })
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.errors.password.message)
+            .to.equal('Path `password` (`pass`) is shorter than the minimum allowed length (8).');
+          expect(res.body.errors.email.message)
+            .to.equal('invalidemailATgmail.com is not a valid email');
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+
+          done();
+        });
+    });
+
+    it('should not create user and return status 400 and a validation error code of 11000 due to existing email', (done) => {
       request(app)
         .post('/users')
         .send({
@@ -214,22 +236,6 @@ describe('Express App', () => {
         .expect(400)
         .expect((res) => {
           expect(res.body.code).to.equal(11000);
-        })
-        .end((err, res) => {
-          if (err) return done(err);
-
-          done();
-        });
-    });
-    it('should return status 400 and a validation error due to invalid email', (done) => {
-      request(app)
-        .post('/users')
-        .send({
-          email: '123213123',
-        })
-        .expect(400)
-        .expect((res) => {
-          expect(res.body.name).to.equal('ValidationError');
         })
         .end((err, res) => {
           if (err) return done(err);
