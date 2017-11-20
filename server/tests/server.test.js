@@ -205,7 +205,7 @@ describe('Express App', () => {
         });
     });
 
-    it('should not create user and return status 400 and a validation error object due to wrong email and password', (done) => {
+    it('should NOT create user and return status 400 and a validation error object due to wrong email and password', (done) => {
       request(app)
         .post('/users')
         .send({
@@ -226,7 +226,7 @@ describe('Express App', () => {
         });
     });
 
-    it('should not create user and return status 400 and a validation error code of 11000 due to existing email', (done) => {
+    it('should NOT create user and return status 400 and a validation error code of 11000 due to existing email', (done) => {
       request(app)
         .post('/users')
         .send({
@@ -270,7 +270,7 @@ describe('Express App', () => {
   });
 
   describe('handles a POST /users/login', () => {
-    it('should return auth token if login is succesful', (done) => {
+    it('should login user and return it with an auth token if login is succesful', (done) => {
       const email = usersSeed[1].email;
       const password = usersSeed[1].password;
 
@@ -283,6 +283,7 @@ describe('Express App', () => {
         .expect(200)
         .expect((res) => {
           expect(res.headers['x-auth']).to.be.a('String');
+          expect(res.body.user._id).to.be.a('String');
           expect(res.body.user.email).to.equal(email);
         })
         .end((err, res) => {
@@ -300,7 +301,7 @@ describe('Express App', () => {
         });
     });
 
-    it('should reject with status 400 if login is unsuccesful', (done) => {
+    it('should NOT login user and reject with status 400 if login is unsuccesful', (done) => {
       const email = usersSeed[1].email;
       const password = 'invalidpass';
 
@@ -329,4 +330,57 @@ describe('Express App', () => {
     });
   });
 
+  describe('handles a DELETE /users/me/token', () => {
+    it.only('should logout user and return an empty response and a 200 status if logout is succesful', (done) => {
+      const email = usersSeed[0].email;
+
+      request(app)
+        .delete('/users/me/token')
+        .set('x-auth', usersSeed[0].tokens[0].token)
+        .expect(200)
+        .expect((res) => {
+          expect(res.headers['x-auth']).to.be.undefined;
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+
+          User.find({
+            email
+          }).then((users) => {
+            expect(users.length).to.equal(1);
+            expect(users[0].tokens).to.be.an('Array');
+            expect(users[0].tokens).to.be.empty;
+            done();
+          }).catch((err) => done(err));
+        });
+    });
+
+    it('should NOT login user and reject with status 400 if login is unsuccesful', (done) => {
+      const email = usersSeed[1].email;
+      const password = 'invalidpass';
+
+      request(app)
+        .post('/users/login')
+        .send({
+          email,
+          password
+        })
+        .expect(400)
+        .expect((res) => {
+          expect(res.headers['x-auth']).to.be.undefined;
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+
+          User.find({
+            email
+          }).then((users) => {
+            expect(users.length).to.equal(1);
+            expect(users[0].tokens).to.be.an('Array');
+            expect(users[0].tokens[0]).to.be.undefined;
+            done();
+          }).catch((err) => done(err));
+        });
+    });
+  });
 });

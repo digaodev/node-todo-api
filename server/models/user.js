@@ -76,6 +76,18 @@ UserSchema.methods.generateAuthToken = function () {
     });
 };
 
+UserSchema.methods.removeToken = function (token) {
+  let userInstance = this;
+
+  return userInstance.update({
+    $pull: {
+      tokens: {
+        token
+      }
+    }
+  });
+};
+
 // overriding this is necessary to limit the information returned by default
 // for security reasons, the token and password should not be returned
 UserSchema.methods.toJSON = function () {

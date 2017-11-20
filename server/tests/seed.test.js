@@ -28,7 +28,7 @@ const secondUserID = new ObjectId();
 
 const usersSeed = [{
     _id: firstUserID,
-    email: 'validseeduser0@test.com',
+    email: 'loggedinseeduser0@test.com',
     password: '00000000',
     tokens: [{
       access: 'auth',
@@ -40,7 +40,7 @@ const usersSeed = [{
   },
   {
     _id: secondUserID,
-    email: 'invalidseeduser1@test.com',
+    email: 'loggedoutseeduser1@test.com',
     password: '11111111'
   }
 ];
