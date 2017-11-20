@@ -20,15 +20,16 @@ beforeEach(populateTodos);
 describe('Express App', () => {
 
   describe('handles a GET /todos', () => {
-    it('should retrieve all the todos', (done) => {
+    it('should retrieve all the todos for a specific user', (done) => {
       request(app)
         .get('/todos')
-        .expect('Content-Type', /json/)
+        .set('x-auth', usersSeed[0].tokens[0].token)
         .expect(200)
+        .expect('Content-Type', /json/)
         .expect((res) => {
           expect(res.body).to.be.an('Object');
           expect(res.body.todos).to.be.an('Array');
-          expect(res.body.todos.length).to.equal(3); // 3 from the seed data
+          expect(res.body.todos.length).to.equal(2); // 2 from the seed data
         })
         .end((err) => {
           if (err) return done(err);
@@ -38,16 +39,33 @@ describe('Express App', () => {
   });
 
   describe('handles a GET /todos/:id', () => {
-    it('should retrieve one specific todo', (done) => {
-      const id = todosSeed[0]._id.toHexString();
+    it('should retrieve one specific todo from a user', (done) => {
+      const todoId = todosSeed[0]._id.toHexString();
 
       request(app)
-        .get(`/todos/${id}`)
-        .expect('Content-Type', /json/)
+        .get(`/todos/${todoId}`)
+        .set('x-auth', usersSeed[0].tokens[0].token)
         .expect(200)
+        .expect('Content-Type', /json/)
         .expect((res) => {
           expect(res.body).to.be.an('Object');
-          expect(res.body.todo._id).to.equal(id);
+          expect(res.body.todo._id).to.equal(todoId);
+        })
+        .end((err) => {
+          if (err) return done(err);
+          done();
+        });
+    });
+
+    it('should NOT retrieve a specific todo another user', (done) => {
+      const todoId = todosSeed[1]._id.toHexString();
+
+      request(app)
+        .get(`/todos/${todoId}`)
+        .set('x-auth', usersSeed[0].tokens[0].token)
+        .expect(404)
+        .expect((res) => {
+          expect(res.body).to.be.empty;
         })
         .end((err) => {
           if (err) return done(err);
@@ -62,6 +80,7 @@ describe('Express App', () => {
 
       request(app)
         .post('/todos')
+        .set('x-auth', usersSeed[0].tokens[0].token)
         .send({
           text
         })
@@ -85,6 +104,7 @@ describe('Express App', () => {
     it('should NOT create a new todo with an empty body data', (done) => {
       request(app)
         .post('/todos')
+        .set('x-auth', usersSeed[0].tokens[0].token)
         .send({
           text: ''
         })
@@ -104,25 +124,49 @@ describe('Express App', () => {
   });
 
   describe('handles a DELETE /todos/:id', () => {
-    it('should delete one specific todo and return it', (done) => {
-      const id = todosSeed[0]._id;
-      const idStr = todosSeed[0]._id.toHexString();
+    it('should delete a specific todo and return it', (done) => {
+      const todoId = todosSeed[0]._id;
+      const todoIdStr = todosSeed[0]._id.toHexString();
 
       request(app)
-        .delete(`/todos/${idStr}`)
-        .expect('Content-Type', /json/)
+        .delete(`/todos/${todoIdStr}`)
+        .set('x-auth', usersSeed[0].tokens[0].token)
         .expect(200)
+        .expect('Content-Type', /json/)
         .expect((res) => {
           expect(res.body).to.be.an('Object');
-          expect(res.body.todo._id).to.equal(idStr);
+          expect(res.body.todo._id).to.equal(todoIdStr);
         })
         .end((err, res) => {
           if (err) return done(err);
 
           Todo.findById({
-            _id: id
+            _id: todoId
           }).then((todo) => {
             expect(todo).to.be.null;
+            done();
+          }).catch((err) => done(err));
+        });
+    });
+
+    it('should NOT delete a specific todo from another user', (done) => {
+      const todoId = todosSeed[1]._id;
+      const todoIdStr = todosSeed[1]._id.toHexString();
+
+      request(app)
+        .delete(`/todos/${todoIdStr}`)
+        .set('x-auth', usersSeed[0].tokens[0].token)
+        .expect(404)
+        .expect((res) => {
+          expect(res.body).to.be.empty;
+        })
+        .end((err, res) => {
+          if (err) return done(err);
+
+          Todo.findById({
+            _id: todoId
+          }).then((todo) => {
+            expect(todo).to.not.be.null;
             done();
           }).catch((err) => done(err));
         });
@@ -130,22 +174,22 @@ describe('Express App', () => {
   });
 
   describe('handles a PATCH /todos/:id', () => {
-    it('should update one specific todo to completed=true and its text, and then return it', (done) => {
-      const id = todosSeed[0]._id;
-      const idStr = todosSeed[0]._id.toHexString();
+    it('should update a specific todo to completed=true and its text, and then return it', (done) => {
+      const todoIdStr = todosSeed[0]._id.toHexString();
       const text = 'Updated todo text';
 
       request(app)
-        .patch(`/todos/${idStr}`)
+        .patch(`/todos/${todoIdStr}`)
+        .set('x-auth', usersSeed[0].tokens[0].token)
         .send({
           text,
           completed: true
         })
-        .expect('Content-Type', /json/)
         .expect(200)
+        .expect('Content-Type', /json/)
         .expect((res) => {
           expect(res.body).to.be.an('Object');
-          expect(res.body.todo._id).to.equal(idStr);
+          expect(res.body.todo._id).to.equal(todoIdStr);
           expect(res.body.todo.text).to.be.equal(text);
           expect(res.body.todo.completed).to.be.true;
           expect(res.body.todo.completedAt).to.be.a('Number');
@@ -153,22 +197,38 @@ describe('Express App', () => {
         .end(done);
     });
 
-    it('should update one specific todo to completed=false and return it', (done) => {
-      const id = todosSeed[1]._id;
-      const idStr = todosSeed[1]._id.toHexString();
+    it('should update a specific todo to completed=false and return it', (done) => {
+      const todoIdStr = todosSeed[2]._id.toHexString();
 
       request(app)
-        .patch(`/todos/${idStr}`)
+        .patch(`/todos/${todoIdStr}`)
+        .set('x-auth', usersSeed[0].tokens[0].token)
         .send({
           completed: false
         })
-        .expect('Content-Type', /json/)
         .expect(200)
+        .expect('Content-Type', /json/)
         .expect((res) => {
           expect(res.body).to.be.an('Object');
-          expect(res.body.todo._id).to.equal(idStr);
+          expect(res.body.todo._id).to.equal(todoIdStr);
           expect(res.body.todo.completed).to.be.false;
           expect(res.body.todo.completedAt).to.be.null;
+        })
+        .end(done);
+    });
+
+    it('should NOT update a specific todo from another user', (done) => {
+      const todoIdStr = todosSeed[1]._id.toHexString();
+
+      request(app)
+        .patch(`/todos/${todoIdStr}`)
+        .set('x-auth', usersSeed[0].tokens[0].token)
+        .send({
+          completed: false
+        })
+        .expect(404)
+        .expect((res) => {
+          expect(res.body).to.be.empty;
         })
         .end(done);
     });
@@ -331,7 +391,7 @@ describe('Express App', () => {
   });
 
   describe('handles a DELETE /users/me/token', () => {
-    it.only('should logout user and return an empty response and a 200 status if logout is succesful', (done) => {
+    it('should logout user and return an empty response and a 200 status if logout is succesful', (done) => {
       const email = usersSeed[0].email;
 
       request(app)
