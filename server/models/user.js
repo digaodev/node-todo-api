@@ -6,8 +6,6 @@ const bcrypt = require('bcryptjs');
 
 const Schema = mongoose.Schema;
 
-const secret = 'a1b2c3';
-
 const UserSchema = new Schema({
   email: {
     type: String,
@@ -63,7 +61,7 @@ UserSchema.methods.generateAuthToken = function () {
   var token = jwt.sign({
     _id: userInstance._id.toHexString(),
     access
-  }, secret).toString();
+  }, process.env.JWT_SECRET).toString();
 
   userInstance.tokens.push({
     access,
@@ -106,7 +104,7 @@ UserSchema.statics.findByToken = function (token) {
   let decodedJWT;
 
   try {
-    decodedJWT = jwt.verify(token, secret);
+    decodedJWT = jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
     return Promise.reject();
   }

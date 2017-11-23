@@ -5,8 +5,6 @@ const bcrypt = require('bcryptjs');
 const Todo = require('../models/todo');
 const User = require('../models/user');
 
-const secret = 'a1b2c3';
-
 const firstUserID = new ObjectId();
 const secondUserID = new ObjectId();
 
@@ -19,7 +17,7 @@ const usersSeed = [{
       token: jwt.sign({
         _id: firstUserID,
         access: 'auth'
-      }, secret).toString()
+      }, process.env.JWT_SECRET).toString()
     }]
   },
   {

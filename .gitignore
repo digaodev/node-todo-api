@@ -57,5 +57,7 @@ typings/
 # dotenv environment variables file
 .env
 
-# jshint file 
+# jshint file
 .jshintrc
+
+server/config/config.json
